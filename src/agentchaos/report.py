@@ -15,10 +15,11 @@ OUTCOME_LABEL = {
 }
 
 
-def build_report(rows: list[dict]) -> dict:
+def build_report(rows: list[dict], *, run_id: str | None = None,
+                 generated_at: str | None = None) -> dict:
     off_rows = [r for r in rows if r["mode"] == "off"]
     on_rows = [r for r in rows if r["mode"] == "on"]
-    return {
+    report: dict = {
         "headline": {
             "silent_failure_rate_defenses_off": silent_failure_rate(off_rows),
             "silent_failure_rate_defenses_on": silent_failure_rate(on_rows),
@@ -26,6 +27,14 @@ def build_report(rows: list[dict]) -> dict:
         },
         "rows": rows,
     }
+    # Emit-side identity for AgentTrace ingestion: a report that names
+    # its own run and generation time can be ingested under that run's
+    # trace ID; without them an ingestor would have to invent both.
+    if run_id is not None:
+        report["run_id"] = run_id
+    if generated_at is not None:
+        report["generated_at"] = generated_at
+    return report
 
 
 def render_markdown(report: dict) -> str:
@@ -37,6 +46,13 @@ def render_markdown(report: dict) -> str:
         "command always produces this report. Token counts are simulated",
         "accounting (fixed per call/step), not billed usage.",
         "",
+    ]
+    if report.get("run_id") or report.get("generated_at"):
+        lines += [
+            f"Run ID: `{report.get('run_id')}` · Generated: {report.get('generated_at')}",
+            "",
+        ]
+    lines += [
         "## Headline",
         "",
         f"- Silent-failure rate, defenses OFF: **{h['silent_failure_rate_defenses_off']:.0%}** "

@@ -39,6 +39,12 @@ python -m pytest
 Outputs: `results/report.md` (human-readable) and `results/report.json`
 (full detail: every event, detection, answer, and token count per run).
 
+Each report also carries its own identity — a `run_id` and a
+`generated_at` timestamp — so an AgentTrace ingestor can key the report
+to a fleet trace without inventing either. The run ID comes from
+`--run-id`, else the `AGENTCHAOS_RUN_ID` env var, else a freshly minted
+one (the pattern agent-canary established).
+
 ## How it works
 
 A bundled sample agent investigates a fake service (`payments-api`) in a
@@ -98,7 +104,7 @@ unchanged.
 ## Verified results
 
 From an actual run of `python -m agentchaos run` in a fresh venv
-(13 pytest tests also pass, including injector and scoring unit tests):
+(17 pytest tests also pass, including injector and scoring unit tests):
 
 | Scenario | Mode | Detected (step) | Outcome | Answer correct | Tokens | Cost (sim.) |
 |---|---|---|---|---|---|---|

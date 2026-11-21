@@ -1,9 +1,18 @@
-"""CLI: ``python -m agentchaos run [--out results]``."""
+"""CLI: ``python -m agentchaos run [--out results] [--run-id <id>]``.
+
+The run ID comes from --run-id, else the AGENTCHAOS_RUN_ID env var,
+else a freshly minted one — the pattern agent-canary established. It is
+stamped into the report alongside the generation time so an AgentTrace
+ingestor can key the report to a fleet trace without inventing either.
+"""
 
 from __future__ import annotations
 
 import argparse
+import os
 import sys
+import uuid
+from datetime import datetime, timezone
 
 from .report import build_report, write_reports
 from .runner import run_matrix
@@ -17,11 +26,22 @@ def main(argv: list[str] | None = None) -> int:
     run_parser.add_argument(
         "--out", default="results", help="directory for report.md / report.json"
     )
+    run_parser.add_argument(
+        "--run-id", default=None,
+        help="run ID stamped into the report "
+             "(default: AGENTCHAOS_RUN_ID env var, else a minted ID)",
+    )
     args = parser.parse_args(argv)
 
     if args.command == "run":
+        run_id = (
+            args.run_id
+            or os.environ.get("AGENTCHAOS_RUN_ID")
+            or f"chaos-{uuid.uuid4().hex[:8]}"
+        )
+        generated_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         rows = run_matrix()
-        report = build_report(rows)
+        report = build_report(rows, run_id=run_id, generated_at=generated_at)
         md_path, json_path = write_reports(report, args.out)
         off = silent_failure_rate([r for r in rows if r["mode"] == "off"])
         on = silent_failure_rate([r for r in rows if r["mode"] == "on"])
