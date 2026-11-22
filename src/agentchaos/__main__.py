@@ -40,8 +40,12 @@ def main(argv: list[str] | None = None) -> int:
             or f"chaos-{uuid.uuid4().hex[:8]}"
         )
         generated_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        # Instance identity for fleet rollups (AgentTrace): the
+        # shared AGENT_INSTANCE env var; "default" when unset.
+        instance = os.environ.get("AGENT_INSTANCE") or "default"
         rows = run_matrix()
-        report = build_report(rows, run_id=run_id, generated_at=generated_at)
+        report = build_report(rows, run_id=run_id,
+                              generated_at=generated_at, instance=instance)
         md_path, json_path = write_reports(report, args.out)
         off = silent_failure_rate([r for r in rows if r["mode"] == "off"])
         on = silent_failure_rate([r for r in rows if r["mode"] == "on"])

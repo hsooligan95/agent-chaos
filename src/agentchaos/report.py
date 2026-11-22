@@ -16,7 +16,8 @@ OUTCOME_LABEL = {
 
 
 def build_report(rows: list[dict], *, run_id: str | None = None,
-                 generated_at: str | None = None) -> dict:
+                 generated_at: str | None = None,
+                 instance: str | None = None) -> dict:
     off_rows = [r for r in rows if r["mode"] == "off"]
     on_rows = [r for r in rows if r["mode"] == "on"]
     report: dict = {
@@ -34,6 +35,11 @@ def build_report(rows: list[dict], *, run_id: str | None = None,
         report["run_id"] = run_id
     if generated_at is not None:
         report["generated_at"] = generated_at
+    # Instance identity, same emit-side pattern: which process of
+    # this agent type ran the matrix, so a fleet rollup can tell two
+    # concurrent chaos processes apart.
+    if instance is not None:
+        report["instance"] = instance
     return report
 
 
