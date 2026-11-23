@@ -4,7 +4,7 @@
 
 ## Verification
 
-- [ ] Tests run: `pip install -e ".[test]"` — result recorded here:
+- [ ] Tests run: `python -m pytest` — result recorded here:
 - [ ] No secrets, tokens, or credentials in code, fixtures, or logs
 - [ ] README/docs updated if behavior changed
 

@@ -17,7 +17,7 @@ python3 -m venv .venv
 ## Run the tests
 
 ```bash
-pip install -e ".[test]"
+python -m pytest
 ```
 
 All tests must pass before a change is proposed. Report the result the test
